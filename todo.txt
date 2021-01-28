@@ -1,0 +1,3 @@
+- Usar um potenciômetro para simular o sensor
+- Usar um led para simular o rele
+- Desenvolver os códigos e a aplicação online

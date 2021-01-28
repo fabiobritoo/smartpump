@@ -1,0 +1,28 @@
+Objetivo
+Desenvolver um dispositivo para controlar a ligação de uma bomba hidraulica
+
+Equipamentos
+1 NodeMCU
+1 Módulo Rele
+1 Sensor de Vazão
+1 Bomba Hidráulica
+
+Procedimento
+
+Usando um NodeMCU, o sensor de vazão irá enviar dados por segundo para a plataforma de Internet das Coisas da IBM, esses dados devem ser mostrados em um aplicativo para mostrar a vazão da água em tempo real. O site também possuirá um botão para ligar e desligar a bomba.
+Aplicativo enviará notificações quando a vazão estiver baixa (água acabou/acabando), ou quando a vazão estiver alta (água chegou novamente)
+
+Elementos do aplicativo
+1 - Mostrador de Vazão
+Os dados serão recebidos por um NodeMCU, através de um sensor de vazão, e postados em um tópico de IoT.
+O aplicativo estará inscrito neste tópico para receber os valores
+
+2 - Botão de Ligar/Desligar a bomba
+O aplicativo irá postar em um tópico, no qual o NodeMCU estará inscrito. Quando o Node receber essa informação, irá ligar o rele para acionar a bomba
+
+
+Passos
+1 - Primeiro protótipo será online (aplicação NodeRed)
+1.1 - Registrar o dispositivo na plataforma
+1.2 - Obter os dados do dispositivo
+1.3 - Preparar a programação do NodeMCU
