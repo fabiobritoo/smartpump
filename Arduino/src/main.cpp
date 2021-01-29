@@ -223,6 +223,7 @@ void loop() {
 
   unsigned long currentMillis = millis();
   if (!client.connected()) {
+    checkPump(0);
     reconnect();
   }
 
