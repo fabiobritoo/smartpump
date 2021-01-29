@@ -4,10 +4,6 @@
 
 #include <PubSubClient.h>                          // Envio por MQTT
 
-#include <Adafruit_Sensor.h>                       // Biblioteca DHT Sensor Adafruit 
-#include <DHT.h>
-#include <DHT_U.h>
-
 #include <ArduinoJson.h>                          // Criar o JSon para envio
 #include <time.h>                                 // Enviar a Hora com o Payload
 
