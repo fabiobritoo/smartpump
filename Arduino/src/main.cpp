@@ -1,5 +1,6 @@
 #include <arduino.h>
 #include <esp8266wifi.h>
+#include <math.h>
 
 #include <PubSubClient.h>                          // Envio por MQTT
 
@@ -200,6 +201,7 @@ void flow()
     Serial.print(frac, DEC) ;      // Print the fractional part of the variable
     Serial.print("L/min");
 
+
     // Serial.print("  Current Liquid Flowing: ");  // Print the number of liters flowed in this second
     // Serial.print(flowMilliLitres);
     // Serial.print("mL/Sec");
@@ -207,7 +209,7 @@ void flow()
     // Serial.print("  Output Liquid Quantity: ");  // Print the cumulative total of liters flowed since starting
     // Serial.print(totalLitres);
     // Serial.println("L");
-
+    //flowRate = roundf(flowRate * 100) / 100; 
     pulseCount = 0;  // Reset the pulse counter so we can start incrementing again
 
     attachInterrupt(PULSE_PIN, pulseCounter, FALLING);    // Enable the interrupt again now that we've finished sending output
