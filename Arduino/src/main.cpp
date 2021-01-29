@@ -231,24 +231,24 @@ void loop() {
   //__ Le Sensores
   //flow = LeTemperatura();
 
-  sensors_event_t event;                        // inicializa o evento da Temperatura
-  dht.temperature().getEvent(&event);           // faz a leitura da Temperatura
-  if (isnan(event.temperature))                 // se algum erro na leitura
-  {
-    Serial.println("Erro na leitura da Temperatura!");
-  }
+//   sensors_event_t event;                        // inicializa o evento da Temperatura
+//   dht.temperature().getEvent(&event);           // faz a leitura da Temperatura
+//   if (isnan(event.temperature))                 // se algum erro na leitura
+//   {
+//     Serial.println("Erro na leitura da Temperatura!");
+//   }
 
- else 
-  {
-   flow =  event.temperature;
+//  else 
+//   {
+//    flow =  event.temperature;
 
-   //__ Envia um dado para a cloud
+//    //__ Envia um dado para a cloud
   
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-    enviaDado(flow);
-  }
+//   if (currentMillis - previousMillis >= interval) {
+//     previousMillis = currentMillis;
+//     enviaDado(flow);
+//   }
 
-  }
+  //}
 
 }
