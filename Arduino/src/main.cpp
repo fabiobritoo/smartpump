@@ -76,9 +76,6 @@ float totalLitres;
 float totalLitresold;
 unsigned long oldTime;
 
-///////
-
-
 ///////////////////////////////////////////////////
 
 // Método que atua no valor recebido pelo tópico de entrada
