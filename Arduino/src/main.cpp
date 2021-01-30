@@ -116,17 +116,26 @@ String dataAtual(){
   time_t now = time(nullptr);
   struct tm* p_tm = localtime(&now);
   String Ano      =  String((p_tm->tm_year + 1900));
-  String Mes      =  String((p_tm->tm_mon + 1));
-  String Dia      =  String((p_tm->tm_mday));
-  String Hora     =  String((p_tm->tm_hour));
-  String Minuto   =  String((p_tm->tm_min));
+  String Mes;
+  String Dia;
+  String Hora;
+  String Minuto;
   String Segundo;
 
-  if ((p_tm->tm_sec) < 10)  Segundo = Segundo + "0";
+  if ((p_tm->tm_mon + 1) < 10)  Mes = "0";
+  Mes  =  Mes + String((p_tm->tm_mon + 1));
 
+  if ((p_tm->tm_mday) < 10)  Dia ="0";
+  Dia  =  Dia + String((p_tm->tm_mday)); 
 
-  Segundo  =  Segundo + String((p_tm->tm_sec));
-  
+  if ((p_tm->tm_hour) < 10)  Hora ="0";
+  Hora  =  Hora + String((p_tm->tm_hour));
+
+  if ((p_tm->tm_min) < 10)  Minuto ="0";
+  Minuto  =  Minuto + String((p_tm->tm_min));
+
+  if ((p_tm->tm_sec) < 10)  Segundo = "0";
+  Segundo  =  Segundo + String((p_tm->tm_sec));  
 
   
   String datetime = Ano + "-" + Mes + "-" + Dia + "T" 
