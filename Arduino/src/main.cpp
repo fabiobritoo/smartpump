@@ -41,12 +41,12 @@ const long interval = 2000;                   // intervalo
 //__ Informações do dispositivo
  
 #define DEVICE_TYPE  "smartroom"
-#define DEVICE_ID    "flowsensor"
+#define DEVICE_ID    "roomcontrol"
 
 // Variáves para Inscrição de Tópico
 
-#define DEVICE_ID_IN    "pump"                                                              // Id do tópico de entrada
-char topicIn[]    = "pump/sensor/britohome";   // Tópico de entrada
+#define DEVICE_ID_IN    "room"                                                              // Id do tópico de entrada
+char topicIn[]    = "room/light/britohome";   // Tópico de entrada
  
 //__ Informações da conexão com o servidor
  
@@ -60,7 +60,7 @@ char authMeth[] = "a-4je244-4vdymohwui";
 //__ Variáveis de conexão com o servidor (Não customizaveis)
  
 char host[]   = "test.mosquitto.org";
-char topic[]    = "flow/sensor/britohome";
+char topic[]    = "room/temp/britohome";
 char token[]    = TOKEN;
 char clientId[] = "a:" ORG ":" DEVICE_ID;
 
@@ -76,9 +76,9 @@ unsigned long oldTime;
 ///////////////////////////////////////////////////
 
 // Método que atua no valor recebido pelo tópico de entrada
-void checkPump(int val){
+void checkLight(int val){
 
-  Serial.print("Pump: "); 
+  Serial.print("Light: "); 
   Serial.println(val); 
 
   if (val == 1){
@@ -102,9 +102,9 @@ void callback(char* topicIn, byte* payload, unsigned int length) {
   
   deserializeJson(doc, payload);
 
-  int pumpValue = doc["d"]["pump"];
+  int lightValue = doc["d"]["light"];
 
-  checkPump(pumpValue);
+  checkLight(lightValue);
 
 }
 
@@ -257,7 +257,7 @@ void check_temp() {
 void loop() {
 
   if (!client.connected()) {
-    checkPump(0);
+    checkLight(0);
     reconnect();
   }
 
