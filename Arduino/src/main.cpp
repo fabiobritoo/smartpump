@@ -7,10 +7,10 @@
 #include <ArduinoJson.h>                          // Criar o JSon para envio
 #include <time.h>                                 // Enviar a Hora com o Payload
 
-const char* ssid     = "HOME";
-const char* password = "12345678";   
+const char* ssid     = "CASA_OI FIBRA";
+const char* password = "dlfql11321";   
 
-#define FLOWPIN 16                                // Pino D0
+#define FLOWPIN 16                                // Pino D2
 #define RELAYPIN 14                               // Pino D5 (Recebimento de Mensagens)
  
 int wifiStatus;
@@ -35,7 +35,7 @@ const long interval = 2000;                   // intervalo
 // Variáves para Inscrição de Tópico
 
 #define DEVICE_ID_IN    "pump"                                                              // Id do tópico de entrada
-char topicIn[]    = "iot-2/type/" DEVICE_TYPE "/id/" DEVICE_ID_IN "/evt/1-anl/fmt/json";   // Tópico de entrada
+char topicIn[]    = "pump/sensor/britohome";   // Tópico de entrada
  
 //__ Informações da conexão com o servidor
  
@@ -48,8 +48,8 @@ char authMeth[] = "a-4je244-4vdymohwui";
 
 //__ Variáveis de conexão com o servidor (Não customizaveis)
  
-char host[]   = ORG ".messaging.internetofthings.ibmcloud.com";
-char topic[]    = "iot-2/type/" DEVICE_TYPE "/id/" DEVICE_ID "/evt/1-anl/fmt/json";
+char host[]   = "test.mosquitto.org";
+char topic[]    = "flow/sensor/britohome";
 char token[]    = TOKEN;
 char clientId[] = "a:" ORG ":" DEVICE_ID;
 
@@ -211,7 +211,7 @@ void flow()
     // Serial.print("  Output Liquid Quantity: ");  // Print the cumulative total of liters flowed since starting
     // Serial.print(totalLitres);
     // Serial.println("L");
-    //flowRate = roundf(flowRate * 100) / 100; 
+    flowRate = roundf(flowRate * 100) / 100; 
     pulseCount = 0;  // Reset the pulse counter so we can start incrementing again
 
     attachInterrupt(PULSE_PIN, pulseCounter, FALLING);    // Enable the interrupt again now that we've finished sending output
