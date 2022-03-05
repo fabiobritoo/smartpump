@@ -7,8 +7,8 @@
 #include <ArduinoJson.h>                          // Criar o JSon para envio
 #include <time.h>                                 // Enviar a Hora com o Payload
 
-const char* ssid     = "CASA_OI FIBRA";
-const char* password = "dlfql11321";   
+const char* ssid     = "HOME";
+const char* password = "12345678";   
 
 #define FLOWPIN 16                                // Pino D2
 #define RELAYPIN 14                               // Pino D5 (Recebimento de Mensagens)
