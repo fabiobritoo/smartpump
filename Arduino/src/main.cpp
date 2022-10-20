@@ -1,6 +1,8 @@
 #include <arduino.h>
 #include <esp8266wifi.h>
 #include <math.h>
+#include <DHT.h>
+#include <Adafruit_Sensor.h>
 
 #include <PubSubClient.h>                          // Envio por MQTT
 
@@ -10,9 +12,18 @@
 const char* ssid     = "HOME";
 const char* password = "12345678";   
 
-#define FLOWPIN 16                                // Pino D0
+
 #define RELAYPIN 14                               // Pino D5 (Recebimento de Mensagens)
- 
+
+#define DHTPIN 4 //Pino digital D2 (GPIO5) conectado ao DHT11 MAYBE16
+#define DHTTYPE DHT11 //Tipo do sensor DHT11
+
+DHT dht(DHTPIN, DHTTYPE); //Inicializando o objeto dht do tipo DHT passando como parâmetro o pino (DHTPIN) e o tipo do sensor (DHTTYPE)
+
+float temperatura; //variável para armazenar a temperatura
+float umidade; //Variável para armazenar a umidade
+
+
 int wifiStatus;
 
 int timezone = -3 * 3600;                     // Definição da TimeZone
@@ -29,13 +40,13 @@ const long interval = 2000;                   // intervalo
  
 //__ Informações do dispositivo
  
-#define DEVICE_TYPE  "smartpump"
-#define DEVICE_ID    "flowsensor"
+#define DEVICE_TYPE  "smartroom"
+#define DEVICE_ID    "roomcontrol"
 
 // Variáves para Inscrição de Tópico
 
-#define DEVICE_ID_IN    "pump"                                                              // Id do tópico de entrada
-char topicIn[]    = "iot-2/type/" DEVICE_TYPE "/id/" DEVICE_ID_IN "/evt/1-anl/fmt/json";   // Tópico de entrada
+#define DEVICE_ID_IN    "room"                                                              // Id do tópico de entrada
+char topicIn[]    = "room/light/britohome";   // Tópico de entrada
  
 //__ Informações da conexão com o servidor
  
@@ -48,8 +59,8 @@ char authMeth[] = "a-4je244-4vdymohwui";
 
 //__ Variáveis de conexão com o servidor (Não customizaveis)
  
-char host[]   = ORG ".messaging.internetofthings.ibmcloud.com";
-char topic[]    = "iot-2/type/" DEVICE_TYPE "/id/" DEVICE_ID "/evt/1-anl/fmt/json";
+char host[]   = "test.mosquitto.org";
+char topic[]    = "room/temp/britohome";
 char token[]    = TOKEN;
 char clientId[] = "a:" ORG ":" DEVICE_ID;
 
@@ -60,28 +71,14 @@ PubSubClient client(host, 1883, NULL, wifiClient);
 
 DynamicJsonDocument doc(1024);                    // Variável para Converter o Json recebido
 
-
-
-// Variáveis do sensor de Vazão
-void ICACHE_RAM_ATTR handleInterrupt();
-
-#define PULSE_PIN D2  //gpio4
-#define FLOW_CALIBRATION 8.2 
-
-volatile long pulseCount = 0;
-float flowRate;
-unsigned int flowMilliLitres;
-unsigned long totalMilliLitres;
-float totalLitres;
-float totalLitresold;
 unsigned long oldTime;
 
 ///////////////////////////////////////////////////
 
 // Método que atua no valor recebido pelo tópico de entrada
-void checkPump(int val){
+void checkLight(int val){
 
-  Serial.print("Pump: "); 
+  Serial.print("Light: "); 
   Serial.println(val); 
 
   if (val == 1){
@@ -105,9 +102,9 @@ void callback(char* topicIn, byte* payload, unsigned int length) {
   
   deserializeJson(doc, payload);
 
-  int pumpValue = doc["d"]["pump"];
+  int lightValue = doc["d"]["light"];
 
-  checkPump(pumpValue);
+  checkLight(lightValue);
 
 }
 
@@ -116,17 +113,26 @@ String dataAtual(){
   time_t now = time(nullptr);
   struct tm* p_tm = localtime(&now);
   String Ano      =  String((p_tm->tm_year + 1900));
-  String Mes      =  String((p_tm->tm_mon + 1));
-  String Dia      =  String((p_tm->tm_mday));
-  String Hora     =  String((p_tm->tm_hour));
-  String Minuto   =  String((p_tm->tm_min));
+  String Mes;
+  String Dia;
+  String Hora;
+  String Minuto;
   String Segundo;
 
-  if ((p_tm->tm_sec) < 10)  Segundo = Segundo + "0";
+  if ((p_tm->tm_mon + 1) < 10)  Mes = "0";
+  Mes  =  Mes + String((p_tm->tm_mon + 1));
 
+  if ((p_tm->tm_mday) < 10)  Dia ="0";
+  Dia  =  Dia + String((p_tm->tm_mday)); 
 
-  Segundo  =  Segundo + String((p_tm->tm_sec));
-  
+  if ((p_tm->tm_hour) < 10)  Hora ="0";
+  Hora  =  Hora + String((p_tm->tm_hour));
+
+  if ((p_tm->tm_min) < 10)  Minuto ="0";
+  Minuto  =  Minuto + String((p_tm->tm_min));
+
+  if ((p_tm->tm_sec) < 10)  Segundo = "0";
+  Segundo  =  Segundo + String((p_tm->tm_sec));  
 
   
   String datetime = Ano + "-" + Mes + "-" + Dia + "T" 
@@ -137,22 +143,23 @@ String dataAtual(){
 }
 
 // Preparar o payload para o envio de dados
-String preparePayload (float data){
+String preparePayload (float data1, float data2){
   
   DynamicJsonDocument doc(1024);
-  doc["d"]["flow"]  = data;
+  doc["d"]["temp"]  = data1;
+  doc["d"]["hum"]  = data2;
   doc["d"]["datetime"] = dataAtual();
   String payload;
   serializeJson(doc, payload);
   return payload;
 
 }
-//__ Envia os dados para a cloud
+//__ Envia os dados para o topico
 
 
-void enviaDado(float dado){
+void enviaDado(float dado1, float dado2){
  
-  String payload = preparePayload(dado);
+  String payload = preparePayload(dado1, dado2);
   Serial.println(payload);
 
  //__ Envia o dado
@@ -163,52 +170,6 @@ void enviaDado(float dado){
     Serial.println("Publish failed");
   }
  
-}
-
-/// Sensor de Vazão
-
-void ICACHE_RAM_ATTR pulseCounter()
-{
-  pulseCount++;
-}
-
-void flow()
-{
-
-  if ((millis() - oldTime) > 1000)   // Only process counters once per second
-  {
-    detachInterrupt(PULSE_PIN);
-    flowRate = ((1000.0 / (millis() - oldTime)) * pulseCount) / FLOW_CALIBRATION;
-    oldTime = millis();
-    flowMilliLitres = (flowRate / 60) * 1000;
-    totalMilliLitres += flowMilliLitres;
-    totalLitres = totalLitresold + totalMilliLitres * 0.001;
-    unsigned int frac;
-
-    // Print the flow rate for this second in liters / minute
-    Serial.print("flowrate: ");
-    Serial.print(int(flowRate));  // Print the integer part of the variable
-
-    Serial.print(".");             // Print the decimal point
-    frac = (flowRate - int(flowRate)) * 10; // Determine the fractional part. The 10 multiplier gives us 1 decimal place.
-    Serial.print(frac, DEC) ;      // Print the fractional part of the variable
-    Serial.print("L/min");
-
-
-    // Serial.print("  Current Liquid Flowing: ");  // Print the number of liters flowed in this second
-    // Serial.print(flowMilliLitres);
-    // Serial.print("mL/Sec");
-
-    // Serial.print("  Output Liquid Quantity: ");  // Print the cumulative total of liters flowed since starting
-    // Serial.print(totalLitres);
-    // Serial.println("L");
-    //flowRate = roundf(flowRate * 100) / 100; 
-    pulseCount = 0;  // Reset the pulse counter so we can start incrementing again
-
-    attachInterrupt(PULSE_PIN, pulseCounter, FALLING);    // Enable the interrupt again now that we've finished sending output
-    enviaDado(flowRate);
-  }
-
 }
 
 void reconnect() {
@@ -231,9 +192,10 @@ void reconnect() {
 }
 
 
-void setup() {
- 
- pinMode(RELAYPIN, OUTPUT);
+void setup() { 
+
+  pinMode(RELAYPIN, OUTPUT);
+  dht.begin(); //Inicializa o sensor DHT11
 
   //__ Inicializa a serial
   
@@ -263,68 +225,43 @@ void setup() {
      Serial.print("*");
      delay(1000);
   }
-  Serial.println("\nTime response....OK");   
+  Serial.println("\nTime response....OK");  
 
-  
-  // Define função callback
-  client.setCallback(callback);
-
-  // Sensor de Vazão
-
-    pulseCount        = 0;
-  flowRate          = 0.0;
-  flowMilliLitres   = 0;
-  totalMilliLitres  = 0;
-  oldTime           = 0;
-  totalLitresold = 0;
-
-  pinMode(PULSE_PIN, INPUT);  // Initialization of the variable "PULSE_PIN" as INPUT (D2 pin)
-
-  attachInterrupt(PULSE_PIN, pulseCounter, FALLING);
-
+  // Define função callback - Chamada quando recebe informação no tópico
+  client.setCallback(callback); 
 
   // Allow the hardware to sort itself out
   delay(1500);
-
   
 }
 
+void check_temp() {
 
+  if ((millis() - oldTime) > 1000)   // Only process counters once per second
+  { 
+    oldTime = millis();
+    temperatura = dht.readTemperature();  //Realiza a leitura da temperatura
+    umidade = dht.readHumidity(); //Realiza a leitura da umidade
+    Serial.print("Temperatura: ");
+    Serial.print(temperatura); //Imprime no monitor serial o valor da temperatura lida
+    Serial.println(" ºC");
+    Serial.print("Umidade: ");
+    Serial.print(umidade); //Imprime no monitor serial o valor da umidade lida
+    Serial.println(" %");
+    enviaDado(temperatura,umidade);
+  }
+  
+}
 
  
 void loop() {
 
-  //unsigned long currentMillis = millis();
   if (!client.connected()) {
-    checkPump(0);
+    checkLight(0);
     reconnect();
   }
 
   client.loop(); 
-
-  flow();
-
-  //__ Le Sensores
-  //flow = LeTemperatura();
-
-//   sensors_event_t event;                        // inicializa o evento da Temperatura
-//   dht.temperature().getEvent(&event);           // faz a leitura da Temperatura
-//   if (isnan(event.temperature))                 // se algum erro na leitura
-//   {
-//     Serial.println("Erro na leitura da Temperatura!");
-//   }
-
-//  else 
-//   {
-//    flow =  event.temperature;
-
-//    //__ Envia um dado para a cloud
-  
-//   if (currentMillis - previousMillis >= interval) {
-//     previousMillis = currentMillis;
-//     enviaDado(flow);
-//   }
-
-  //}
+  check_temp();
 
 }
